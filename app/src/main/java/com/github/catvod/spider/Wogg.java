@@ -6,9 +6,9 @@ import com.github.catvod.bean.Class;
 import com.github.catvod.bean.Result;
 import com.github.catvod.bean.Vod;
 import com.github.catvod.net.OkHttp;
+import com.github.catvod.utils.Json;
 import com.github.catvod.utils.Util;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -32,7 +32,7 @@ public class Wogg extends Ali {
     private final Pattern regexCategory = Pattern.compile("/vodtype/(\\w+).html");
     private final Pattern regexPageTotal = Pattern.compile("\\$\\(\"\\.mac_total\"\\)\\.text\\('(\\d+)'\\);");
 
-    private JsonObject extend;
+    private JsonObject ext;
 
     private Map<String, String> getHeader() {
         Map<String, String> header = new HashMap<>();
@@ -42,15 +42,15 @@ public class Wogg extends Ali {
 
     @Override
     public void init(Context context, String extend) {
-        this.extend = JsonParser.parseString(extend).getAsJsonObject();
-        super.init(context, this.extend.get("token").getAsString());
+        ext = Json.safeObject(extend);
+        super.init(context, ext.has("token") ? ext.get("token").getAsString() : "");
     }
 
     @Override
     public String homeContent(boolean filter) {
         List<Class> classes = new ArrayList<>();
-        String url = extend.has("filter") ? extend.get("filter").getAsString() : "";
-        Document doc = Jsoup.parse(OkHttp.string(siteUrl, getHeader()));
+        String url = ext.has("filter") ? ext.get("filter").getAsString() : "";
+        Document doc = Jsoup.parse(OkHttp.string(client(), siteUrl, getHeader()));
         Elements elements = doc.select(".nav-link");
         for (Element e : elements) {
             Matcher mather = regexCategory.matcher(e.attr("href"));
@@ -58,7 +58,7 @@ public class Wogg extends Ali {
                 classes.add(new Class(mather.group(1), e.text().trim()));
             }
         }
-        return Result.string(classes, parseVodListFromDoc(doc), url.isEmpty() ? null : JsonParser.parseString(OkHttp.string(url)));
+        return Result.string(classes, parseVodListFromDoc(doc), url.isEmpty() ? null : Json.parse(OkHttp.string(url)));
     }
 
     @Override
@@ -69,7 +69,7 @@ public class Wogg extends Ali {
                 urlParams[Integer.parseInt(key)] = extend.get(key);
             }
         }
-        Document doc = Jsoup.parse(OkHttp.string(String.format("%s/index.php/vodshow/%s.html", siteUrl, String.join("-", urlParams)), getHeader()));
+        Document doc = Jsoup.parse(OkHttp.string(client(), String.format("%s/index.php/vodshow/%s.html", siteUrl, String.join("-", urlParams)), getHeader()));
         int page = Integer.parseInt(pg), limit = 72, total = 0;
         Matcher matcher = regexPageTotal.matcher(doc.html());
         if (matcher.find()) total = Integer.parseInt(matcher.group(1));
@@ -93,7 +93,7 @@ public class Wogg extends Ali {
     @Override
     public String detailContent(List<String> ids) throws Exception {
         String vodId = ids.get(0);
-        Document doc = Jsoup.parse(OkHttp.string(siteUrl + vodId, getHeader()));
+        Document doc = Jsoup.parse(OkHttp.string(client(), siteUrl + vodId, getHeader()));
 
         Vod item = new Vod();
         item.setVodId(vodId);
@@ -105,8 +105,8 @@ public class Wogg extends Ali {
         List<String> shareLinks = doc.select(".module-row-text").eachAttr("data-clipboard-text");
         for (int i = 0; i < shareLinks.size(); i++) shareLinks.set(i, shareLinks.get(i).trim());
 
-        item.setVodPlayFrom(super.detailContentVodPlayFrom(shareLinks));
-        item.setVodPlayUrl(super.detailContentVodPlayUrl(shareLinks));
+        item.setVodPlayFrom(detailContentVodPlayFrom(shareLinks));
+        item.setVodPlayUrl(detailContentVodPlayUrl(shareLinks));
 
         Elements elements = doc.select(".video-info-item");
         for (Element e : elements) {
@@ -139,7 +139,7 @@ public class Wogg extends Ali {
 
     private String searchContent(String key, String pg) {
         String searchURL = siteUrl + String.format("/index.php/vodsearch/%s----------%s---.html", URLEncoder.encode(key), pg);
-        String html = OkHttp.string(searchURL, getHeader());
+        String html = OkHttp.string(client(), searchURL, getHeader());
         Elements items = Jsoup.parse(html).select(".module-search-item");
         List<Vod> list = new ArrayList<>();
         for (Element item : items) {

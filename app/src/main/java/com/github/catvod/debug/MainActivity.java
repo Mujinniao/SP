@@ -1,103 +1,103 @@
 package com.github.catvod.debug;
 
 import android.app.Activity;
-import android.os.*;
+import android.os.Bundle;
+import android.widget.Button;
 
-import android.view.ViewGroup;
-import android.webkit.CookieManager;
-import android.webkit.WebView;
-import android.webkit.WebViewClient;
 import com.github.catvod.R;
-import com.github.catvod.net.OkHttp;
-import com.github.catvod.spider.*;
-import org.apache.commons.lang3.StringEscapeUtils;
-import org.json.JSONException;
-
-import static com.github.catvod.utils.Util.addView;
-import static com.github.catvod.utils.Util.removeView;
+import com.github.catvod.crawler.Spider;
+import com.github.catvod.spider.Init;
+import com.github.catvod.spider.Yingshiche;
+import com.orhanobut.logger.AndroidLogAdapter;
+import com.orhanobut.logger.Logger;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class MainActivity extends Activity {
+
+    private ExecutorService executor;
+    private Spider spider;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        //Logger.addLogAdapter(new AndroidLogAdapter());
-        Init.init(getApplicationContext());
-        // It is usually init in the application.
-        new Thread(() -> {
+        Button homeContent = findViewById(R.id.homeContent);
+        Button homeVideoContent = findViewById(R.id.homeVideoContent);
+        Button categoryContent = findViewById(R.id.categoryContent);
+        Button detailContent = findViewById(R.id.detailContent);
+        Button playerContent = findViewById(R.id.playerContent);
+        Button searchContent = findViewById(R.id.searchContent);
+        homeContent.setOnClickListener(view -> executor.execute(this::homeContent));
+        homeVideoContent.setOnClickListener(view -> executor.execute(this::homeVideoContent));
+        categoryContent.setOnClickListener(view -> executor.execute(this::categoryContent));
+        detailContent.setOnClickListener(view -> executor.execute(this::detailContent));
+        playerContent.setOnClickListener(view -> executor.execute(this::playerContent));
+        searchContent.setOnClickListener(view -> executor.execute(this::searchContent));
+        Logger.addLogAdapter(new AndroidLogAdapter());
+        executor = Executors.newCachedThreadPool();
+        executor.execute(this::initSpider);
+    }
 
-            MaoLv z = new MaoLv();
+    private void initSpider() {
+        try {
+            Init.init(getApplicationContext());
+            spider = new Yingshiche();
+            spider.init(this, "");
+        } catch (Throwable e) {
+            e.printStackTrace();
+        }
+    }
 
-            try {
-                z.init(MainActivity.this, "http://maolvys.com");//https://dm84.tv
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
+    public void homeContent() {
+        try {
+            Logger.t("homeContent").d(spider.homeContent(true));
+        } catch (Throwable e) {
+            e.printStackTrace();
+        }
+    }
 
+    public void homeVideoContent() {
+        try {
+            Logger.t("homeVideoContent").d(spider.homeVideoContent());
+        } catch (Throwable e) {
+            e.printStackTrace();
+        }
+    }
 
-//                String json = z.homeContent(true);
-//               System.out.println(json);
+    public void categoryContent() {
+        try {
+            Logger.t("categoryContent").d(spider.categoryContent("tid", "1", true, new HashMap<>()));
+        } catch (Throwable e) {
+            e.printStackTrace();
+        }
+    }
 
+    public void detailContent() {
+        try {
+            Logger.t("detailContent").d(spider.detailContent(Arrays.asList("/voddetail/5553.html")));
+        } catch (Throwable e) {
+            e.printStackTrace();
+        }
+    }
 
+    public void playerContent() {
+        try {
+            Logger.t("playerContent").d(spider.playerContent("轉存原畫", "kahf2rw5Uuk+652f55f6943ee2f75d8e4fa590b4ec65fd007f8c", new ArrayList<>()));
+        } catch (Throwable e) {
+            e.printStackTrace();
+        }
+    }
 
-            //      HashMap<String, String> map = new HashMap<>();
-            //          String s = null;
-            //         try {
-            //            s = z.categoryContent("2", "1", true, map);
-            //       } catch (JSONException e) {
-            //            e.printStackTrace();
-            //        }
-            //        System.out.println(s);
-
-
-
-//                    HashMap<String, String> map = new HashMap<>();
-            // map.put("area", "中国香港");
- //                    String s = z.categoryContent("2", "1",  true, map);
- //                 System.out.println(s);
-
-
-
-            //          ArrayList<String> ids = new ArrayList<>();
-            //         ids.add("4358");//4070
-            //    String s = null;
-            //       try {
-            //          s = z.detailContent(ids);
-            //       } catch (JSONException e) {
-            //           e.printStackTrace();
-            //       }
-            //      System.out.println(s);
-
-
- //                ArrayList<String> ids = new ArrayList<>();
- //                 ids.add("150898");//4070
-  //                String s = z.detailContent(ids);
-  //                 System.out.println(s);
-
-
-
- //                  String s = null;
- //                   try {
- //                        s = z.searchContent("我的", true);
-  //                   } catch (JSONException e) {
-  //                      e.printStackTrace();
-  //                 }
- //                    System.out.println(s);
-
-
-//                String s = z.searchContent("我的", true);
- //               System.out.println(s);
-
-
-            //   String s = z.playerContent("", "http://42.157.128.109:2323/CH/app/app.php?url\u003dcaihong-3c0b6e19221a9166", null);
-            //  System.out.println(s);
-
-
-
-        }).start();
+    public void searchContent() {
+        try {
+            Logger.t("searchContent").d(spider.searchContent("我的人间烟火", false));
+        } catch (Throwable e) {
+            e.printStackTrace();
+        }
     }
 }

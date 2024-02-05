@@ -17,8 +17,6 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 
-
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -59,7 +57,7 @@ public class Btt extends Spider {
             String img = element.select("a:nth-child(1) > img:nth-child(1)").attr("src");
             String name = element.select("h3:nth-child(3) > a:nth-child(1)").text();
             String remark = element.select("div:nth-child(2) > span:nth-child(1)").text();
-            String id = element.select("a:nth-child(1)").attr("href").replaceAll("\\D+","");
+            String id = element.select("a:nth-child(1)").attr("href").replaceAll("\\D+", "");
             list.add(new Vod(id, name, img, remark));
         }
         return Result.string(classes, list);
@@ -75,13 +73,11 @@ public class Btt extends Spider {
             String img = element.select("a:nth-child(1) > img:nth-child(1)").attr("src");
             String name = element.select("h3:nth-child(3) > a:nth-child(1)").text();
             String remark = element.select("a:nth-child(1) > div:nth-child(2) > span:nth-child(1)").text();
-            String id = element.select("h3:nth-child(3) > a:nth-child(1)").attr("href").replaceAll("\\D+","");
+            String id = element.select("h3:nth-child(3) > a:nth-child(1)").attr("href").replaceAll("\\D+", "");
             list.add(new Vod(id, name, img, remark));
         }
         return Result.string(list);
     }
-
-
 
 
     public String detailContent(List<String> ids) {
@@ -103,7 +99,6 @@ public class Btt extends Spider {
         vod.setVodContent(content);
         vod.setVodDirector(director);
         vod.setTypeName(type);
-
 
 
         Map<String, String> sites = new LinkedHashMap<>();
@@ -132,7 +127,6 @@ public class Btt extends Spider {
     }
 
 
-
     public String searchContent(String key, boolean quick) {
         List<Vod> list = new ArrayList<>();
         String target = siteUrl.concat("xsssearch?q=").concat(key);
@@ -141,7 +135,7 @@ public class Btt extends Spider {
             String img = element.select("a:nth-child(1) > img:nth-child(1)").attr("src");
             String name = element.select("h3:nth-child(2) > a:nth-child(1)").text();
             String remark = element.select("a:nth-child(1) > div:nth-child(2) > span:nth-child(1)").text();
-            String id = element.select("a:nth-child(1)").attr("href").replaceAll("\\D+","");
+            String id = element.select("a:nth-child(1)").attr("href").replaceAll("\\D+", "");
             list.add(new Vod(id, name, img, remark));
         }
         return Result.string(list);

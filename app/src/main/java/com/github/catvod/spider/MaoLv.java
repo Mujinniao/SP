@@ -128,10 +128,11 @@ public class MaoLv extends Spider {
     }
 
 
-
+/*
     public String searchContent(String key, boolean quick) throws JSONException {
         List<Vod> list = new ArrayList<>();
-        String target = siteUrl.concat("/index.php/ajax/suggest?mid=1&wd=").concat(key);
+        //String target = siteUrl.concat("/index.php/ajax/suggest?mid=1&wd=").concat(key);
+        String target = siteUrl.concat("/vod/search/?wd=").concat(key);
         String Search = OkHttp.string(target, getHeaders());
         JSONObject JSON = new JSONObject(Search);
         JSONArray List = JSON.getJSONArray("list");
@@ -141,6 +142,21 @@ public class MaoLv extends Spider {
             String name = item.getString("name");
             String img = item.getString("pic");
             list.add(new Vod(id, name, img));
+        }
+        return Result.string(list);
+    }
+*/
+
+    public String searchContent(String key, boolean quick) {
+        List<Vod> list = new ArrayList<>();
+        String target = siteUrl.concat("/vod/search/?wd=").concat(key);
+        Document doc = Jsoup.parse(OkHttp.string(target, getHeaders()));
+        for (Element element : doc.select("div.public-list-box")) {
+            String img = element.select("div:nth-child(2) > a:nth-child(1) > img:nth-child(1)").attr("src");
+            String name = element.select("div:nth-child(3) > div:nth-child(1) > div:nth-child(1) > a:nth-child(1)").text();
+            String remark = element.select("div:nth-child(2) > a:nth-child(1) > span:nth-child(2)").text();
+            String id = element.select("div:nth-child(2) > a:nth-child(1)").attr("href").replaceAll("\\D+","");
+            list.add(new Vod(id, name, img, remark));
         }
         return Result.string(list);
     }

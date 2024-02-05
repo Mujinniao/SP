@@ -29,7 +29,7 @@ import java.util.Map;
 public class Wangfei extends Spider {
 
 
-    private static final String siteUrl = "https://www.wangfei.eu";
+    private static final String siteUrl = "https://www.wangfei.la";
 
 
     private HashMap<String, String> getHeaders() {
@@ -44,14 +44,14 @@ public class Wangfei extends Spider {
         List<Class> classes = new ArrayList<>();
         Document doc = Jsoup.parse(OkHttp.string(siteUrl, getHeaders()));
         for (Element element : doc.select("li.swiper-slide > a:nth-child(1)")) {
-            if (element.attr("href").startsWith("/vodtype")) {
-                String id = element.attr("href").replaceAll("^(/vodtype/)(.*)(\\.html)$", "$2");
+            if (element.attr("href").startsWith("/vod-type")) {
+                String id = element.attr("href").replaceAll("\\D+", "");
                 String name = element.attr("title");
                 classes.add(new Class(id, name));
             }
         }
-        for (Element element : doc.select(".main > div:nth-child(1) > div:nth-child(1) > div:nth-child(2) > div:nth-child(1) > a")) {
-            String img = element.select("div:nth-child(1) > div:nth-child(3) > img:nth-child(1)").attr("data-original");
+        for (Element element : doc.select("div.module-main > div.module-items > a")) {
+            String img = element.select("div:nth-child(1) > div:nth-child(2) > img:nth-child(1)").attr("data-original");
             String name = element.attr("title");
             String remark = element.select("div:nth-child(1) > div:nth-child(1)").text();
             String id = element.attr("href").replaceAll("\\D+","");
@@ -64,10 +64,10 @@ public class Wangfei extends Spider {
 
     public String categoryContent(String tid, String pg, boolean filter, HashMap<String, String> extend) {
         List<Vod> list = new ArrayList<>();
-        String target = siteUrl + String.format("/vodshow/id/%s/page/%s.html", tid, pg);
+        String target = siteUrl + String.format("/vod-show-id-%s-page-%s.html", tid, pg);
         Document doc = Jsoup.parse(OkHttp.string(target, getHeaders()));
         for (Element element : doc.select("a.module-poster-item")) {
-            String img = element.select("div:nth-child(1) > div:nth-child(3) > img:nth-child(1)").attr("data-original");
+            String img = element.select("div:nth-child(1) > div:nth-child(2) > img:nth-child(1)").attr("data-original");
             String name = element.attr("title");
             String remark = element.select("div:nth-child(1) > div:nth-child(1)").text();
             String id = element.attr("href").replaceAll("\\D+","");
@@ -80,14 +80,14 @@ public class Wangfei extends Spider {
 
 
     public String detailContent(List<String> ids) {
-        Document doc = Jsoup.parse(OkHttp.string(siteUrl.concat("/voddetail/").concat(ids.get(0)), getHeaders()));
-        String name = doc.select(".module-info-heading > h1:nth-child(1) > a:nth-child(1)").text();
-        String remarks = doc.select("div.module-info-item-content:nth-child(4)").text();
+        Document doc = Jsoup.parse(OkHttp.string(siteUrl.concat("/vod-detail-id-").concat(ids.get(0)), getHeaders()));
+        String name = doc.select(".module-info-heading > h1:nth-child(1) > span:nth-child(1)").text();
+        String remarks = doc.select("div.module-info-item:nth-child(5) > div:nth-child(2)").text();
         String img = doc.select(".ls-is-cached").attr("data-original");
-        String type = doc.select(".module-info-tag").text();
-        String actor = doc.select("div.module-info-item:nth-child(9) > div:nth-child(2)").text();
-        String content = doc.select(".show-desc > p:nth-child(1)").text();
-        String director = doc.select("div.module-info-content:nth-child(2) > div:nth-child(1) > div:nth-child(7) > div:nth-child(2)").text();
+        String type = doc.select("div.module-info-tag-link:nth-child(3)").text();
+        String actor = doc.select("div.module-info-item:nth-child(3) > div:nth-child(2)").text();
+        String content = doc.select(".module-info-introduction-content > p:nth-child(1)").text();
+        String director = doc.select("div.module-info-item:nth-child(2) > div:nth-child(2) > a:nth-child(1)").text();
 
         Vod vod = new Vod();
         vod.setVodId(ids.get(0));
@@ -102,8 +102,8 @@ public class Wangfei extends Spider {
 
 
         Map<String, String> sites = new LinkedHashMap<>();
-        Elements sources = doc.select("div.tab-item");
-        Elements sourceList = doc.select("div.tab-list > div:nth-child(1) > div:nth-child(1)");
+        Elements sources = doc.select("div.module-tab-item");
+        Elements sourceList = doc.select("div.module-play-list-content");
         for (int i = 0; i < sources.size(); i++) {
             Element source = sources.get(i);
             String sourceName = source.text();
@@ -111,7 +111,7 @@ public class Wangfei extends Spider {
             List<String> vodItems = new ArrayList<>();
             for (int j = 0; j < playList.size(); j++) {
                 Element e = playList.get(j);
-                vodItems.add(e.select("span").text() + "$" + e.attr("href"));
+                vodItems.add(e.text() + "$" + e.attr("href"));
             }
             if (vodItems.size() > 0) {
                 sites.put(sourceName, TextUtils.join("#", vodItems));
@@ -130,7 +130,7 @@ public class Wangfei extends Spider {
 
     public String searchContent(String key, boolean quick) {
         List<Vod> list = new ArrayList<>();
-        String target = siteUrl.concat("/vodsearch.html?wd=").concat(key);
+        String target = siteUrl.concat("/vod-search.html?wd=").concat(key);
         Document doc = Jsoup.parse(OkHttp.string(target, getHeaders()));
         for (Element element : doc.select("div.module-card-item")) {
             String img = element.select("a:nth-child(2) > div:nth-child(1) > div:nth-child(2) > img:nth-child(1)").attr("data-original");

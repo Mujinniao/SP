@@ -10,13 +10,10 @@ import com.github.catvod.crawler.Spider;
 import com.github.catvod.net.OkHttp;
 
 
-
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-
-
 
 
 import java.util.ArrayList;
@@ -51,7 +48,7 @@ public class Nongm extends Spider {
             String img = element.select("a div.pic img").attr("data-src");
             String name = element.select("a").attr("title");
             String remark = element.select("a > div > span > span").text();
-            String id = element.select("a").attr("href").replaceAll("\\D+","");
+            String id = element.select("a").attr("href").replaceAll("\\D+", "");
             list.add(new Vod(id, name, img, remark));
         }
         return Result.string(classes, list);
@@ -67,13 +64,11 @@ public class Nongm extends Spider {
             String img = element.select("div > img").attr("src");
             String name = element.select("a[title]").attr("title");
             String remark = element.select("span.sBottom").text();
-            String id = element.select("a").attr("href").replaceAll("\\D+","");
+            String id = element.select("a").attr("href").replaceAll("\\D+", "");
             list.add(new Vod(id, name, img, remark));
         }
         return Result.string(list);
     }
-
-
 
 
     public String detailContent(List<String> ids) {
@@ -93,35 +88,19 @@ public class Nongm extends Spider {
         vod.setVodRemarks(remarks);
         vod.setVodContent(content);
         vod.setVodDirector(director);
+        vod.setVodPlayFrom("nm");
 
 
-
-
-        Map<String, String> sites = new LinkedHashMap<>();
-        Elements sources = doc.select(".hd > ul:nth-child(1) > li");
-        Elements sourceList = doc.select("[class=numList]");
-        for (int i = 0; i < sources.size(); i++) {
-            Element source = sources.get(i);
-            String sourceName = source.text();
-            Elements playList = sourceList.get(i).select("a");
-            List<String> vodItems = new ArrayList<>();
-            for (int j = 0; j < playList.size(); j++) {
-                Element e = playList.get(j);
-                vodItems.add(e.text() + "$" + e.attr("href"));
-            }
-            if (vodItems.size() > 0) {
-                sites.put(sourceName, TextUtils.join("#", vodItems));
-            }
+        Elements sourceList = doc.select("div.numList > ul > li");
+        List<String> vodItems = new ArrayList<>();
+        for (int i = sourceList.size() - 1; i >= 0; i--) {
+            Element element = sourceList.get(i);
+            vodItems.add(element.select("a").text() + "$" + element.select("a").attr("href"));
         }
-        if (sites.size() > 0) {
-            vod.setVodPlayFrom(TextUtils.join("$$$", sites.keySet()));
-            vod.setVodPlayUrl(TextUtils.join("$$$", sites.values()));
-        }
-
+        vod.setVodPlayUrl(TextUtils.join("#", vodItems));
 
         return Result.string(vod);
     }
-
 
 
     public String searchContent(String key, boolean quick) {
@@ -132,7 +111,7 @@ public class Nongm extends Spider {
             String img = element.select("div:nth-child(1) > a:nth-child(1) > img:nth-child(1)").attr("data-src");
             String name = element.select("div:nth-child(2) > span:nth-child(1)").text();
             String remark = element.select("div:nth-child(2) > span:nth-child(3)").text();
-            String id = element.select("div:nth-child(1) > a:nth-child(1)").attr("href").replaceAll("\\D+","");
+            String id = element.select("div:nth-child(1) > a:nth-child(1)").attr("href").replaceAll("\\D+", "");
             list.add(new Vod(id, name, img, remark));
         }
         return Result.string(list);
